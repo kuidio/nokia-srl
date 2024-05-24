@@ -25,7 +25,7 @@ import (
 	"strings"
 
 	"github.com/henderiw/logger/log"
-	//conditionv1alpha1 "github.com/kuidio/kuid/apis/condition/v1alpha1"
+	conditionv1alpha1 "github.com/kuidio/kuid/apis/condition/v1alpha1"
 	"github.com/kuidio/kuid/pkg/reconcilers/resource"
 	"github.com/kuidio/kuid/pkg/resources"
 	netwv1alpha1 "github.com/kuidio/kuidapps/apis/network/v1alpha1"
@@ -80,7 +80,7 @@ func (r *reconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, c i
 
 	return nil, ctrl.NewControllerManagedBy(mgr).
 		Named(controllerName).
-		For(&netwv1alpha1.Network{}).
+		For(&netwv1alpha1.NetworkDevice{}).
 		Owns(&configv1alpha1.Config{}).
 		Complete(r)
 }
@@ -98,7 +98,7 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	log := log.FromContext(ctx)
 	log.Info("reconcile")
 
-	cr := &netwv1alpha1.Network{}
+	cr := &netwv1alpha1.NetworkDevice{}
 	if err := r.Client.Get(ctx, req.NamespacedName, cr); err != nil {
 		// if the resource no longer exists the reconcile loop is done
 		if resource.IgnoreNotFound(err) != nil {
@@ -108,6 +108,8 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 	cr = cr.DeepCopy()
+
+	// TODO add provider logic
 
 	if !cr.GetDeletionTimestamp().IsZero() {
 		if err := r.delete(ctx, cr); err != nil {
@@ -138,74 +140,76 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, perrors.Wrap(r.Client.Status().Update(ctx, cr), errUpdateStatus)
 	}
 
-	//cr.SetConditions(conditionv1alpha1.Ready())
+	cr.SetConditions(conditionv1alpha1.Ready())
 	r.recorder.Eventf(cr, corev1.EventTypeNormal, crName, "ready")
 	return ctrl.Result{}, perrors.Wrap(r.Client.Status().Update(ctx, cr), errUpdateStatus)
 }
 
-func (r *reconciler) handleError(ctx context.Context, cr *netwv1alpha1.Network, msg string, err error) {
+func (r *reconciler) handleError(ctx context.Context, cr *netwv1alpha1.NetworkDevice, msg string, err error) {
 	log := log.FromContext(ctx)
 	if err == nil {
-		//cr.SetConditions(conditionv1alpha1.Failed(msg))
+		cr.SetConditions(conditionv1alpha1.Failed(msg))
 		log.Error(msg)
 		r.recorder.Eventf(cr, corev1.EventTypeWarning, crName, msg)
 	} else {
-		//cr.SetConditions(conditionv1alpha1.Failed(err.Error()))
+		cr.SetConditions(conditionv1alpha1.Failed(err.Error()))
 		log.Error(msg, "error", err)
 		r.recorder.Eventf(cr, corev1.EventTypeWarning, crName, fmt.Sprintf("%s, err: %s", msg, err.Error()))
 	}
 }
 
-func (r *reconciler) apply(ctx context.Context, cr *netwv1alpha1.Network) error {
+func (r *reconciler) apply(ctx context.Context, cr *netwv1alpha1.NetworkDevice) error {
 	resources := resources.New(r.Client, resources.Config{
 		Owns: []schema.GroupVersionKind{
 			configv1alpha1.SchemeGroupVersion.WithKind(configv1alpha1.ConfigKind),
 		},
 	})
 
-	nds, err := r.getNetworkDeviceConfigs(ctx, cr)
-	if err != nil {
-		return err
-	}
-	for _, nd := range nds {
-		var buf bytes.Buffer
-		if err := r.parser.Render(ctx, nd, &buf); err != nil {
-			return err
-		}
-		
-		cfg := configv1alpha1.BuildConfig(
-			metav1.ObjectMeta{
-				Namespace: nd.GetNamespace(),
-				Name:      nd.GetName(),
-				Labels: map[string]string{
-					"config.sdcio.dev/targetName": getNodeName(nd.GetName()),
-					"config.sdcio.dev/targetNamespace": nd.GetNamespace(),
-				},
-			},
-			configv1alpha1.ConfigSpec{
-				Priority: 10,
-				Config: []configv1alpha1.ConfigBlob{
-					{
-						Path: "/",
-						Value: runtime.RawExtension{
-							Raw: buf.Bytes(),
-						},
-					},
-				},
-			},
-			configv1alpha1.ConfigStatus{},
-		)
-		b, err := yaml.Marshal(cfg)
+	/*
+		nds, err := r.getNetworkDeviceConfigs(ctx, cr)
 		if err != nil {
 			return err
 		}
-		fmt.Println(string(b))
+		for _, nd := range nds {
+	*/
+	var buf bytes.Buffer
+	if err := r.parser.Render(ctx, cr, &buf); err != nil {
+		return err
 	}
+
+	cfg := configv1alpha1.BuildConfig(
+		metav1.ObjectMeta{
+			Namespace: cr.GetNamespace(),
+			Name:      cr.GetName(),
+			Labels: map[string]string{
+				"config.sdcio.dev/targetName":      getNodeName(cr.GetName()),
+				"config.sdcio.dev/targetNamespace": cr.GetNamespace(),
+			},
+		},
+		configv1alpha1.ConfigSpec{
+			Priority: 10,
+			Config: []configv1alpha1.ConfigBlob{
+				{
+					Path: "/",
+					Value: runtime.RawExtension{
+						Raw: buf.Bytes(),
+					},
+				},
+			},
+		},
+		configv1alpha1.ConfigStatus{},
+	)
+	b, err := yaml.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(b))
+	//}
 
 	return resources.APIApply(ctx, cr)
 }
 
-func (r *reconciler) delete(ctx context.Context, cr *netwv1alpha1.Network) error {
+func (r *reconciler) delete(ctx context.Context, cr *netwv1alpha1.NetworkDevice) error {
 	resources := resources.New(r.Client, resources.Config{
 		Owns: []schema.GroupVersionKind{
 			configv1alpha1.SchemeGroupVersion.WithKind(configv1alpha1.ConfigKind),
@@ -215,6 +219,8 @@ func (r *reconciler) delete(ctx context.Context, cr *netwv1alpha1.Network) error
 	return resources.APIDelete(ctx, cr)
 }
 
+
+/*
 func (r *reconciler) getNetworkDeviceConfigs(ctx context.Context, cr *netwv1alpha1.Network) ([]*netwv1alpha1.NetworkDevice, error) {
 	nds := []*netwv1alpha1.NetworkDevice{}
 
@@ -233,8 +239,7 @@ func (r *reconciler) getNetworkDeviceConfigs(ctx context.Context, cr *netwv1alph
 	}
 	return nds, nil
 }
-
-
+*/
 func getNodeName(name string) string {
 	lastDotIndex := strings.LastIndex(name, ".")
 	if lastDotIndex == -1 {

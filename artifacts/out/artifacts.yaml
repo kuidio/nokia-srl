@@ -205,7 +205,7 @@ rules:
   verbs: [get, watch, list, update, patch]
 - apiGroups: [network.app.kuid.dev]
   resources: [networkdevices, networkdevices/status]
-  verbs: [get, watch, list]
+  verbs: [get, watch, list, "update", "patch"]
 - apiGroups: ["config.sdcio.dev"]
   resources: ["configs", "configs/status"]
   verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]

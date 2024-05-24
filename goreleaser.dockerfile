@@ -7,6 +7,8 @@ ARG USERID=10000
 # no need to include cgo bindings
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 
+COPY templates /app/templates
+
 # add ca certificates and timezone data files
 RUN apt-get install --yes --no-install-recommends ca-certificates tzdata
 

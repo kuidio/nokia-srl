@@ -107,6 +107,8 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 	cr = cr.DeepCopy()
 
+	// TODO add provider logic
+
 	if !cr.GetDeletionTimestamp().IsZero() {
 		if err := r.delete(ctx, cr); err != nil {
 			r.handleError(ctx, cr, "canot delete resources", err)

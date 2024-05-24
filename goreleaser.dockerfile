@@ -29,7 +29,7 @@ FROM alpine:latest
 
 #COPY --chown=$USERID:$USERID pkgserver /app/
 COPY nokia-srl /app/
-COPY templates /app/templates
+COPY --from=builder /templates /app/templates
 WORKDIR /app
 
 # from now on, run as the unprivileged user

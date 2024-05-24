@@ -1,0 +1,11 @@
+{{define "srlnetworkinstancebgpvpn"}}
+          "bgp-instance": [
+            {
+              "id": 1,
+              "route-target": {
+                "export-rt": "{{.ExportRouteTarget}}",
+                "import-rt": "{{.ImportRouteTarget}}"
+              }
+            }
+          ]
+{{- end}}

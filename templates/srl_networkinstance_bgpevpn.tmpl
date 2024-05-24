@@ -1,0 +1,11 @@
+{{define "srlnetworkinstancebgpevpn"}}
+          "bgp-instance": [
+            {
+              "id": 1,
+              "admin-state": "enable",
+              "vxlan-interface": "{{ (ifName .VXLANInterface) }}.{{ $.EVI}}",
+              "evi": {{.EVI}},
+              "encapsulation-type": "vxlan"
+            }
+          ]
+{{- end}}

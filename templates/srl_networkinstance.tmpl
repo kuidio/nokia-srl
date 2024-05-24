@@ -1,0 +1,42 @@
+{{define "srlnetworkinstance"}}
+      "name": "{{.Name}}",
+      "description": "k8s-{{.Name}}",
+      "admin-state": "enable",
+      "type": "{{ .Type }}",
+  {{- if ne 0 (len .Interfaces)}}
+      "interface": [
+    {{- range $index, $interface := .Interfaces}}
+        {{- if $index}},{{- end}}
+        {
+          "name": "{{ (ifName $interface.Name) }}.{{ $interface.ID}}"
+        }
+    {{- end}}
+      ]{{- if .Protocols}},{{ end }}
+  {{- end }}
+  {{- if .VXLANInterface }}
+      "vxlan-interface": [
+        {
+          "name": "{{ (ifName .VXLANInterface.Name) }}.{{ .VXLANInterface.ID }}"
+        }
+      ],
+  {{- end }}
+  {{- if .Protocols }}
+      "protocols": {
+    {{- if .Protocols.BGP }}
+        "bgp": {
+          {{- template "srlnetworkinstancebgp" $.Protocols.BGP}}
+        }{{- if .Protocols.BGPVPN }},{{end}}
+    {{- end }}
+    {{- if .Protocols.BGPVPN }}
+        "bgp-vpn": {
+          {{- template "srlnetworkinstancebgpvpn" $.Protocols.BGPVPN}}
+        }{{- if .Protocols.BGPEVPN }},{{end}}
+    {{- end }}
+    {{- if .Protocols.BGPEVPN }}
+        "bgp-evpn": {
+          {{- template "srlnetworkinstancebgpevpn" $.Protocols.BGPEVPN}}
+        }
+    {{- end }}
+      }
+  {{- end }}
+{{- end}}

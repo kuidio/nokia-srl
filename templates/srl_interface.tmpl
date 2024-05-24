@@ -1,0 +1,25 @@
+{{define "srlinterface"}}
+      "name": "{{ (ifName .Name ) }}",
+      "description": "k8s-{{(ifName .Name )}}",
+      "admin-state": "enable",
+      {{- if .VLANTagging}}
+        "vlan-tagging": {{.VLANTagging}},
+      {{- end}}
+      "ethernet": {
+        {{- if and (ne .Speed "") (ne (isBreakoutPort .Name) true)}}
+        "port-speed": "{{.Speed}}"{{- if eq .LAGMember true }},{{- end}}
+        {{- end}}
+        {{- if eq .LAGMember true }}
+          "aggregate-id": "{{.LAGMember}}"
+        {{- end}}
+      }{{if ne 0 (len $.SubInterfaces)}},{{end}}
+      {{- if ne 0 (len $.SubInterfaces)}}
+      "subinterface": [
+      {{- range $index, $subinterface := .SubInterfaces}}
+        {
+          {{- template "srlinterfacesubinterface" .}}
+        }{{if lt $index (dec (len $.SubInterfaces))}},{{end}}
+      {{- end}}
+      ]
+      {{- end}}
+{{- end}}

@@ -1,0 +1,21 @@
+  {{define "srlnetworkinstancebgppeergroup"}}
+              "group-name": "{{.Name}}",
+              "export-policy": "{{.Name}}",
+              "admin-state": "enable",
+              "next-hop-self": true,
+              "afi-safi": [
+              {{- range $index, $af := .AddressFamilies}}
+                {{- if $index}},{{- end}}
+                {
+                  "afi-safi-name": "{{ $af }}",
+                  "admin-state": "enable"
+                }
+              {{- end }}
+              ]{{- if .RouteReflector }},{{- end }}
+              {{- if .RouteReflector }}
+              "route-reflector": {
+                "client": true,
+                "cluster-id": "{{ .RouteReflector.ClusterID }}"
+              }
+              {{- end }}
+{{- end}}

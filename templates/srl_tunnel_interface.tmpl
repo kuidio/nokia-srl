@@ -1,0 +1,12 @@
+{{define "srltunnelinterface"}}
+      "name": "{{ (ifName .Name ) }}"{{- if ne 0 (len $.SubInterfaces)}},{{end}}
+      {{- if ne 0 (len $.SubInterfaces)}}
+      "vxlan-interface": [
+      {{- range $index, $subinterface := .SubInterfaces}}
+        {
+          {{- template "srltunnelsubinterface" .}}
+        }{{if lt $index (dec (len $.SubInterfaces))}},{{end}}
+      {{- end}}
+      ]
+      {{- end}}
+{{- end}}

@@ -1,0 +1,18 @@
+{{define "srlsystem"}}
+  {{- if .Protocols }}
+    "network-instance": {
+      "protocols": {
+      {{- if .Protocols.BGPVPN }}
+        "bgp-vpn": {
+        {{- template "srlsystemprotocolsbgpvpn" .Protocols.BGPVPN}}
+        }{{- if .Protocols.BGPEVPN }},{{ end }}
+      {{- end }}
+      {{- if .Protocols.BGPEVPN }}
+        "evpn": {
+        {{- template "srlsystemprotocolsbgpevpn" .Protocols.BGPEVPN}}
+        }
+      {{- end }}
+      }
+    }
+  {{- end }}
+{{- end }}

@@ -1,0 +1,15 @@
+  {{define "srlnetworkinstancebgpneighbor"}}
+        {{- if ne .LocalAS 0}}
+              "local-as": {
+                "as-number": "{{.LocalAS}}", "prepend-global-as": false
+              },
+        {{- end}}
+              "peer-address": "{{.PeerAddress}}",
+              "peer-as": {{.PeerAS}},
+              "peer-group": "{{.PeerGroup}}"{{- if ne .LocalAddress ""}},{{end}}
+        {{- if ne .LocalAddress ""}}
+              "transport":{
+                "local-address": "{{.LocalAddress}}"
+              }
+        {{- end}}
+{{- end}}

@@ -1,0 +1,11 @@
+{{define "srlinterfacesubinterfacevlan"}}
+            "encap": {
+    {{- if eq (derefUint32 .) 0 }}
+              "untagged": {}
+    {{- else}}
+              "single-tagged": {
+                "vlan-id": {{ (derefUint32 .) }}
+              }
+            }
+    {{- end}}
+{{- end}}

@@ -1,0 +1,43 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: kuid-nokia-srl
+  name: kuid-nokia-srl-clusterrole
+rules:
+- apiGroups: [""]
+  resources: [events, configmaps]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [coordination.k8s.io]
+  resources: [leases]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [srl.nokia.app.kuid.dev]
+  resources: [nodemodels, nodemodels/status]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [infra.be.kuid.dev]
+  resources: [nodes, nodes/status]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [infra.be.kuid.dev]
+  resources: [endpoints, endpoints/status]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [infra.be.kuid.dev]
+  resources: [modules, modules/status]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [infra.be.kuid.dev]
+  resources: [modulebays, modulebays/status]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [infra.be.kuid.dev]
+  resources: [nodeitems, nodeitems/status]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [network.app.kuid.dev]
+  resources: [networks]
+  verbs: [get, watch, list, update, patch]
+- apiGroups: [network.app.kuid.dev]
+  resources: [networks/status]
+  verbs: [get, watch, list, update, patch]
+- apiGroups: [network.app.kuid.dev]
+  resources: [networkdevices, networkdevices/status]
+  verbs: [get, watch, list]
+- apiGroups: ["config.sdcio.dev"]
+  resources: ["configs", "configs/status"]
+  verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]

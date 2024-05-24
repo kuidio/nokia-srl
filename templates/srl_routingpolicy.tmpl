@@ -1,0 +1,61 @@
+{{define "srlroutingpolicy"}}
+{{- if ne 0 (len $.RoutingPolicies)}}
+    "prefix-set": [
+    {{- range $index, $rp := .RoutingPolicies}}
+      {
+        "name": "{{$rp.Name}}-ipv4",
+        "prefix": [
+        {{- range $index, $ipv4 := $rp.IPv4Prefixes}}
+          {
+            "ip-prefix": "{{$ipv4}}",
+            "mask-length-range": "32..32"
+          }{{if lt $index (dec (len $rp.IPv4Prefixes))}},{{end}}
+        {{- end}}
+        ]
+      },
+      {
+        "name": "{{$rp.Name}}-ipv6",
+        "prefix": [
+        {{- range $index, $ipv6 := $rp.IPv6Prefixes}}
+          {
+            "ip-prefix": "{{$ipv6}}",
+            "mask-length-range": "128..128"
+          }{{if lt $index (dec (len $rp.IPv6Prefixes))}},{{end}}
+        {{- end}}
+        ]
+      }{{if lt $index (dec (len $.RoutingPolicies))}},{{end}}
+    {{- end}}
+    ],
+    "policy": [
+    {{- range $index, $rp := .RoutingPolicies}}
+      {
+        "name": "{{.Name}}",
+        "statement": [
+         {{- if ne 0 (len $rp.IPv4Prefixes)}}
+          {
+            "name": "10",
+            "match": {
+              "prefix-set": "underlay-ipv4"
+            },
+            "action": {
+              "policy-result": "accept"
+            }
+          }{{- if ne 0 (len $rp.IPv6Prefixes)}},{{end}}
+        {{- end}}
+        {{- if ne 0 (len $rp.IPv6Prefixes)}}
+          {
+            "name": "20",
+            "match": {
+              "prefix-set": "underlay-ipv6"
+            },
+            "action": {
+              "policy-result": "accept"
+            }
+          }
+        {{- end}}
+        ]
+      }{{if lt $index (dec (len $.RoutingPolicies))}},{{end}}
+    {{- end}}
+    ]
+{{- end}}
+{{- end}}

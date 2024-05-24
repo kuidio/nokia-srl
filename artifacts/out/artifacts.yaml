@@ -1,0 +1,351 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: nodemodels.srl.nokia.app.kuid.dev
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.15.0
+spec:
+  group: srl.nokia.app.kuid.dev
+  names:
+    kind: NodeModel
+    listKind: NodeModelList
+    plural: nodemodels
+    singular: nodemodel
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: NodeModel is the Schema for the srlinux node model API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              interfaces:
+                description: Interfaces defines the interfaces belonging to the node model
+                items:
+                  properties:
+                    name:
+                      type: string
+                    speed:
+                      type: string
+                    vlanTagging:
+                      type: boolean
+                  required:
+                  - speed
+                  type: object
+                type: array
+              parametersRef:
+                description: |-
+                  ParametersRef points to the vendor or implementation specific params for the
+                  node.
+                properties:
+                  apiVersion:
+                    description: API version of the referent.
+                    type: string
+                  fieldPath:
+                    description: |-
+                      If referring to a piece of an object instead of an entire object, this string
+                      should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                      For example, if the object reference is to a container within a pod, this would take on a value like:
+                      "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                      the event) or if no container name is specified "spec.containers[2]" (container with
+                      index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                      referencing a part of an object.
+                      TODO: this design is not final and this field is subject to change in the future.
+                    type: string
+                  kind:
+                    description: |-
+                      Kind of the referent.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                    type: string
+                  name:
+                    description: |-
+                      Name of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    type: string
+                  namespace:
+                    description: |-
+                      Namespace of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                    type: string
+                  resourceVersion:
+                    description: |-
+                      Specific resourceVersion to which this reference is made, if any.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                    type: string
+                  uid:
+                    description: |-
+                      UID of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              provider:
+                description: Provider specifies the provider implementing this node config.
+                type: string
+            required:
+            - interfaces
+            - provider
+            type: object
+        type: object
+    served: true
+    storage: true
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuid-nokia-srl
+  namespace: kuid-system
+  labels:
+    app.kubernetes.io/name: kuid-nokia-srl
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kuid-nokia-srl
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kuid-nokia-srl
+    spec:
+      securityContext:
+        runAsUser: 10000
+        runAsGroup: 10000
+        fsGroup: 10000
+      serviceAccountName: kuid-nokia-srl
+      containers:
+      - name: kuid-nokia-srl
+        image: europe-docker.pkg.dev/srlinux/eu.gcr.io/kuid-nokia-srl:latest
+        imagePullPolicy: Always
+        command:
+        - /app/nokia-srl
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: "NODE_NAME"
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: "NODE_IP"
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.hostIP
+        - name: ENABLE_NODECONFIG
+          value: "true"
+        - name: ENABLE_DEVICECONFIG
+          value: "true"
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: kuid-nokia-srl
+  name: kuid-nokia-srl-clusterrole
+rules:
+- apiGroups: [""]
+  resources: [events, configmaps]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [coordination.k8s.io]
+  resources: [leases]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [srl.nokia.app.kuid.dev]
+  resources: [nodemodels, nodemodels/status]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [infra.be.kuid.dev]
+  resources: [nodes, nodes/status]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [infra.be.kuid.dev]
+  resources: [endpoints, endpoints/status]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [infra.be.kuid.dev]
+  resources: [modules, modules/status]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [infra.be.kuid.dev]
+  resources: [modulebays, modulebays/status]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [infra.be.kuid.dev]
+  resources: [nodeitems, nodeitems/status]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [network.app.kuid.dev]
+  resources: [networks]
+  verbs: [get, watch, list, update, patch]
+- apiGroups: [network.app.kuid.dev]
+  resources: [networks/status]
+  verbs: [get, watch, list, update, patch]
+- apiGroups: [network.app.kuid.dev]
+  resources: [networkdevices, networkdevices/status]
+  verbs: [get, watch, list]
+- apiGroups: ["config.sdcio.dev"]
+  resources: ["configs", "configs/status"]
+  verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/name: kuid-nokia-srl
+  name: kuid-nokia-srl-clusterrole-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kuid-nokia-srl-clusterrole
+subjects:
+- kind: ServiceAccount
+  name: kuid-nokia-srl
+  namespace: kuid-system
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/name: kuid-nokia-srl
+  name: kuid-nokia-srl-leader-election-role
+  namespace: kuid-system
+rules:
+- apiGroups: [""]
+  resources: [configmaps]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [coordination.k8s.io]
+  resources: [leases]
+  verbs: [get, watch, list, create, update, patch, delete]
+- apiGroups: [""]
+  resources: [events]
+  verbs: [create, patch]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/name: kuid-nokia-srl
+  name: kuid-nokia-srl-leader-election-role-binding
+  namespace: kuid-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kuid-nokia-srl-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: kuid-nokia-srl
+  namespace: kuid-system
+
+---
+apiVersion: srl.nokia.app.kuid.dev/v1alpha1
+kind: NodeModel
+metadata:
+  name: ixr3dl.srlinux.nokia.com
+  namespace: default
+spec:
+  provider: srlinux.nokia.com
+  interfaces:
+  - name: "e1-1"
+    speed: "10G"
+  - name: "e1-2"
+    speed: "10G"
+  - name: "e1-3"
+    speed: "100G"
+  - name: "e1-4"
+    speed: "100G"
+  - name: "e1-5"
+    speed: "100G"
+  - name: "e1-6"
+    speed: "100G"
+  - name: "e1-7"
+    speed: "100G"
+  - name: "e1-8"
+    speed: "100G"
+  - name: "e1-9"
+    speed: "100G"
+  - name: "e1-10"
+    speed: "100G"
+  - name: "e1-11"
+    speed: "100G"
+  - name: "e1-12"
+    speed: "100G"
+  - name: "e1-13"
+    speed: "100G"
+  - name: "e1-14"
+    speed: "100G"
+  - name: "e1-15"
+    speed: "100G"
+  - name: "e1-16"
+    speed: "100G"
+  - name: "e1-17"
+    speed: "100G"
+  - name: "e1-18"
+    speed: "100G"
+  - name: "e1-19"
+    speed: "100G"
+  - name: "e1-20"
+    speed: "100G"
+  - name: "e1-21"
+    speed: "100G"
+  - name: "e1-22"
+    speed: "100G"
+  - name: "e1-23"
+    speed: "100G"
+  - name: "e1-24"
+    speed: "100G"
+  - name: "e1-25"
+    speed: "100G"
+  - name: "e1-26"
+    speed: "100G"
+  - name: "e1-27"
+    speed: "100G"
+  - name: "e1-28"
+    speed: "100G"
+  - name: "e1-29"
+    speed: "100G"
+  - name: "e1-30"
+    speed: "100G"
+  - name: "e1-31"
+    speed: "100G"
+  - name: "e1-32"
+    speed: "100G"
+  - name: "e1-33"
+    speed: "100G"
+  - name: "e1-34"
+    speed: "100G"
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: kuid-nokia-srl
+  name: kuid-nokia-srl
+  namespace: kuid-system
+

@@ -1,0 +1,46 @@
+{{define "srlinterfacesubinterface"}}
+          "index": {{.ID}},
+    {{- if .Type}}
+          "type": "{{.Type}}",
+    {{- end}}
+          "admin-state": "enable",
+          "description": "k8s-{{.PeerName}}",
+    {{- if .VLAN}}
+          "vlan": {
+            {{- template "srlinterfacesubinterfacevlan" .VLAN}}
+          }{{- if or (.IPv4) (.IPv6) }},{{- end}}
+    {{- end}}
+    {{- if eq .Type "routed" ""}}
+    {{- if .IPv4 }}
+          "ipv4":{
+            "admin-state": "enable",
+            {{- if ne 0 (len .IPv4.Addresses)}}
+            "address": [
+            {{- range $index, $address := .IPv4.Addresses}}
+              {
+                "ip-prefix": "{{ $address }}"
+              }{{if lt $index (dec (len $.IPv4.Addresses))}},{{end}}
+            {{- end}}
+            ],
+            "unnumbered": {
+              "admin-state": "disable"
+            }
+            {{- end}}
+          }{{if .IPv6}},{{end}}
+    {{- end}}
+    {{- if .IPv6 }}
+          "ipv6":{
+            "admin-state": "enable",
+            {{- if ne 0 (len .IPv6.Addresses)}}
+            "address": [
+            {{- range $index, $address := .IPv6.Addresses}}
+              {
+                "ip-prefix": "{{ $address }}"
+              }{{if lt $index (dec (len $.IPv6.Addresses))}},{{end}}
+            {{- end}}
+            ]
+            {{- end}}
+          }
+    {{- end}}
+    {{- end}}
+{{- end}}

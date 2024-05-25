@@ -7,6 +7,10 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	NokiaSRLProvider = "srlinux.nokia.com"
+)
+
 func (r *NodeModel) GetEndPoints(cr *infrabev1alpha1.Node) ([]*infrabev1alpha1.Endpoint, error) {
 
 	nodeGroupNodeID := infrabev1alpha1.String2NodeGroupNodeID(cr.GetName())

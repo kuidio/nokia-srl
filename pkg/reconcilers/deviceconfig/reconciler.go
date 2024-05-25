@@ -29,6 +29,7 @@ import (
 	"github.com/kuidio/kuid/pkg/reconcilers/resource"
 	"github.com/kuidio/kuid/pkg/resources"
 	netwv1alpha1 "github.com/kuidio/kuidapps/apis/network/v1alpha1"
+	invv1alpha1 "github.com/kuidio/nokia-srl/apis/inv/v1alpha1"
 	"github.com/kuidio/nokia-srl/pkg/parser"
 	"github.com/kuidio/nokia-srl/pkg/reconcilers"
 	"github.com/kuidio/nokia-srl/pkg/reconcilers/ctrlconfig"
@@ -109,7 +110,9 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 	cr = cr.DeepCopy()
 
-	// TODO add provider logic
+	if cr.Spec.Provider != invv1alpha1.NokiaSRLProvider {
+		return ctrl.Result{Requeue: true}, nil
+	}
 
 	if !cr.GetDeletionTimestamp().IsZero() {
 		if err := r.delete(ctx, cr); err != nil {
@@ -219,26 +222,25 @@ func (r *reconciler) delete(ctx context.Context, cr *netwv1alpha1.NetworkDevice)
 	return resources.APIDelete(ctx, cr)
 }
 
-
 /*
-func (r *reconciler) getNetworkDeviceConfigs(ctx context.Context, cr *netwv1alpha1.Network) ([]*netwv1alpha1.NetworkDevice, error) {
-	nds := []*netwv1alpha1.NetworkDevice{}
+	func (r *reconciler) getNetworkDeviceConfigs(ctx context.Context, cr *netwv1alpha1.Network) ([]*netwv1alpha1.NetworkDevice, error) {
+		nds := []*netwv1alpha1.NetworkDevice{}
 
-	opts := []client.ListOption{
-		client.InNamespace(cr.Namespace),
-	}
-	ndList := &netwv1alpha1.NetworkDeviceList{}
-	if err := r.Client.List(ctx, ndList, opts...); err != nil {
-		return nil, fmt.Errorf("cannot get nodeModel from api, err: %s", err.Error())
-	}
-
-	for _, nd := range ndList.Items {
-		if strings.HasPrefix(nd.Name, cr.Name) {
-			nds = append(nds, &nd)
+		opts := []client.ListOption{
+			client.InNamespace(cr.Namespace),
 		}
+		ndList := &netwv1alpha1.NetworkDeviceList{}
+		if err := r.Client.List(ctx, ndList, opts...); err != nil {
+			return nil, fmt.Errorf("cannot get nodeModel from api, err: %s", err.Error())
+		}
+
+		for _, nd := range ndList.Items {
+			if strings.HasPrefix(nd.Name, cr.Name) {
+				nds = append(nds, &nd)
+			}
+		}
+		return nds, nil
 	}
-	return nds, nil
-}
 */
 func getNodeName(name string) string {
 	lastDotIndex := strings.LastIndex(name, ".")

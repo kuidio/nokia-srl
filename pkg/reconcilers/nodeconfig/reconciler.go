@@ -107,7 +107,9 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 	cr = cr.DeepCopy()
 
-	// TODO add provider logic
+	if cr.Spec.Provider != invv1alpha1.NokiaSRLProvider {
+		return ctrl.Result{Requeue: true}, nil
+	}
 
 	if !cr.GetDeletionTimestamp().IsZero() {
 		if err := r.delete(ctx, cr); err != nil {

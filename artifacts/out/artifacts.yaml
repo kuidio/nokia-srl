@@ -272,205 +272,201 @@ subjects:
 
 ---
 apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gotemplates-srl
-  namespace: kuid-system
 data:
   main.tmpl: |-
     {
-      {{`{{- if .System }}`}}
+      {{- if .System }}
       "system": {
-        {{`{{- template "srlsystem" .System}}`}}
+        {{- template "srlsystem" .System}}
       },
-      {{`{{- end }}`}}
-      {{`{{- if ne 0 (len .Interfaces)}}`}}
+      {{- end }}
+      {{- if ne 0 (len .Interfaces)}}
       "interface": [
-      {{`{{- range $index, $interface := .Interfaces}}`}}
-        {{`{{- if $index}}`}},{{`{{- end}}`}}
+      {{- range $index, $interface := .Interfaces}}
+        {{- if $index}},{{- end}}
         {
-          {{`{{- template "srlinterface" .}}`}}
+          {{- template "srlinterface" .}}
         }
-      {{`{{- end}}`}}
-      ]{{`{{if ne 0 (len $.NetworkInstances)}}`}},{{`{{end}}`}}
-      {{`{{- end}}`}}
-      {{`{{- if ne 0 (len $.NetworkInstances)}}`}}
+      {{- end}}
+      ]{{if ne 0 (len $.NetworkInstances)}},{{end}}
+      {{- end}}
+      {{- if ne 0 (len $.NetworkInstances)}}
       "network-instance": [
-      {{`{{- range $index, $ni := .NetworkInstances}}`}}
-        {{`{{- if $index}}`}},{{`{{- end}}`}}
+      {{- range $index, $ni := .NetworkInstances}}
+        {{- if $index}},{{- end}}
         {
-          {{`{{- template "srlnetworkinstance" .}}`}}
+          {{- template "srlnetworkinstance" .}}
         }
-      {{`{{- end}}`}}
-      ]{{`{{if or (ne 0 (len $.RoutingPolicies)) (ne 0 (len $.TunnelInterfaces)) }}`}},{{`{{end}}`}}
-      {{`{{- end}}`}}
-      {{`{{- if ne 0 (len $.RoutingPolicies)}}`}}
+      {{- end}}
+      ]{{if or (ne 0 (len $.RoutingPolicies)) (ne 0 (len $.TunnelInterfaces)) }},{{end}}
+      {{- end}}
+      {{- if ne 0 (len $.RoutingPolicies)}}
       "routing-policy": {
-          {{`{{- template "srlroutingpolicy" .}}`}}
+          {{- template "srlroutingpolicy" .}}
       },
-      {{`{{- end}}`}}
-      {{`{{- if ne 0 (len $.TunnelInterfaces)}}`}}
+      {{- end}}
+      {{- if ne 0 (len $.TunnelInterfaces)}}
       "tunnel-interface": [
-      {{`{{- range $index, $interface := .TunnelInterfaces}}`}}
-        {{`{{- if $index}}`}},{{`{{- end}}`}}
+      {{- range $index, $interface := .TunnelInterfaces}}
+        {{- if $index}},{{- end}}
         {
-          {{`{{- template "srltunnelinterface" .}}`}}
+          {{- template "srltunnelinterface" .}}
         }
-      {{`{{- end}}`}}
+      {{- end}}
       ]
-      {{`{{- end}}`}}
+      {{- end}}
     }
   srl_interface.tmpl: |-
-    {{`{{define "srlinterface"}}`}}
-          "name": "{{`{{ (ifName .Name ) }}`}}",
-          "description": "k8s-{{`{{(ifName .Name )}}`}}",
+    {{define "srlinterface"}}
+          "name": "{{ (ifName .Name ) }}",
+          "description": "k8s-{{(ifName .Name )}}",
           "admin-state": "enable",
-          {{`{{- if .VLANTagging}}`}}
-            "vlan-tagging": {{`{{.VLANTagging}}`}},
-          {{`{{- end}}`}}
+          {{- if .VLANTagging}}
+            "vlan-tagging": {{.VLANTagging}},
+          {{- end}}
           "ethernet": {
-            {{`{{- if and (ne .Speed "") (ne (isBreakoutPort .Name) true)}}`}}
-            "port-speed": "{{`{{.Speed}}`}}"{{`{{- if eq .LAGMember true }}`}},{{`{{- end}}`}}
-            {{`{{- end}}`}}
-            {{`{{- if eq .LAGMember true }}`}}
-              "aggregate-id": "{{`{{.LAGMember}}`}}"
-            {{`{{- end}}`}}
-          }{{`{{if ne 0 (len $.SubInterfaces)}}`}},{{`{{end}}`}}
-          {{`{{- if ne 0 (len $.SubInterfaces)}}`}}
+            {{- if and (ne .Speed "") (ne (isBreakoutPort .Name) true)}}
+            "port-speed": "{{.Speed}}"{{- if eq .LAGMember true }},{{- end}}
+            {{- end}}
+            {{- if eq .LAGMember true }}
+              "aggregate-id": "{{.LAGMember}}"
+            {{- end}}
+          }{{if ne 0 (len $.SubInterfaces)}},{{end}}
+          {{- if ne 0 (len $.SubInterfaces)}}
           "subinterface": [
-          {{`{{- range $index, $subinterface := .SubInterfaces}}`}}
+          {{- range $index, $subinterface := .SubInterfaces}}
             {
-              {{`{{- template "srlinterfacesubinterface" .}}`}}
-            }{{`{{if lt $index (dec (len $.SubInterfaces))}}`}},{{`{{end}}`}}
-          {{`{{- end}}`}}
+              {{- template "srlinterfacesubinterface" .}}
+            }{{if lt $index (dec (len $.SubInterfaces))}},{{end}}
+          {{- end}}
           ]
-          {{`{{- end}}`}}
-    {{`{{- end}}`}}
+          {{- end}}
+    {{- end}}
   srl_interface_subinterface.tmpl: |-
-    {{`{{define "srlinterfacesubinterface"}}`}}
-              "index": {{`{{.ID}}`}},
-        {{`{{- if .Type}}`}}
-              "type": "{{`{{.Type}}`}}",
-        {{`{{- end}}`}}
+    {{define "srlinterfacesubinterface"}}
+              "index": {{.ID}},
+        {{- if .Type}}
+              "type": "{{.Type}}",
+        {{- end}}
               "admin-state": "enable",
-              "description": "k8s-{{`{{.PeerName}}`}}",
-        {{`{{- if .VLAN}}`}}
+              "description": "k8s-{{.PeerName}}",
+        {{- if .VLAN}}
               "vlan": {
-                {{`{{- template "srlinterfacesubinterfacevlan" .VLAN}}`}}
-              }{{`{{- if or (.IPv4) (.IPv6) }}`}},{{`{{- end}}`}}
-        {{`{{- end}}`}}
-        {{`{{- if eq .Type "routed" ""}}`}}
-        {{`{{- if .IPv4 }}`}}
+                {{- template "srlinterfacesubinterfacevlan" .VLAN}}
+              }{{- if or (.IPv4) (.IPv6) }},{{- end}}
+        {{- end}}
+        {{- if eq .Type "routed" ""}}
+        {{- if .IPv4 }}
               "ipv4":{
                 "admin-state": "enable",
-                {{`{{- if ne 0 (len .IPv4.Addresses)}}`}}
+                {{- if ne 0 (len .IPv4.Addresses)}}
                 "address": [
-                {{`{{- range $index, $address := .IPv4.Addresses}}`}}
+                {{- range $index, $address := .IPv4.Addresses}}
                   {
-                    "ip-prefix": "{{`{{ $address }}`}}"
-                  }{{`{{if lt $index (dec (len $.IPv4.Addresses))}}`}},{{`{{end}}`}}
-                {{`{{- end}}`}}
+                    "ip-prefix": "{{ $address }}"
+                  }{{if lt $index (dec (len $.IPv4.Addresses))}},{{end}}
+                {{- end}}
                 ],
                 "unnumbered": {
                   "admin-state": "disable"
                 }
-                {{`{{- end}}`}}
-              }{{`{{if .IPv6}}`}},{{`{{end}}`}}
-        {{`{{- end}}`}}
-        {{`{{- if .IPv6 }}`}}
+                {{- end}}
+              }{{if .IPv6}},{{end}}
+        {{- end}}
+        {{- if .IPv6 }}
               "ipv6":{
                 "admin-state": "enable",
-                {{`{{- if ne 0 (len .IPv6.Addresses)}}`}}
+                {{- if ne 0 (len .IPv6.Addresses)}}
                 "address": [
-                {{`{{- range $index, $address := .IPv6.Addresses}}`}}
+                {{- range $index, $address := .IPv6.Addresses}}
                   {
-                    "ip-prefix": "{{`{{ $address }}`}}"
-                  }{{`{{if lt $index (dec (len $.IPv6.Addresses))}}`}},{{`{{end}}`}}
-                {{`{{- end}}`}}
+                    "ip-prefix": "{{ $address }}"
+                  }{{if lt $index (dec (len $.IPv6.Addresses))}},{{end}}
+                {{- end}}
                 ]
-                {{`{{- end}}`}}
+                {{- end}}
               }
-        {{`{{- end}}`}}
-        {{`{{- end}}`}}
-    {{`{{- end}}`}}
+        {{- end}}
+        {{- end}}
+    {{- end}}
   srl_interface_subinterface_vlan.tmpl: |-
-    {{`{{define "srlinterfacesubinterfacevlan"}}`}}
+    {{define "srlinterfacesubinterfacevlan"}}
                 "encap": {
-        {{`{{- if eq (derefUint32 .) 0 }}`}}
+        {{- if eq (derefUint32 .) 0 }}
                   "untagged": {}
-        {{`{{- else}}`}}
+        {{- else}}
                   "single-tagged": {
-                    "vlan-id": {{`{{ (derefUint32 .) }}`}}
+                    "vlan-id": {{ (derefUint32 .) }}
                   }
                 }
-        {{`{{- end}}`}}
-    {{`{{- end}}`}}
+        {{- end}}
+    {{- end}}
   srl_networkinstance.tmpl: |-
-    {{`{{define "srlnetworkinstance"}}`}}
-          "name": "{{`{{.Name}}`}}",
-          "description": "k8s-{{`{{.Name}}`}}",
+    {{define "srlnetworkinstance"}}
+          "name": "{{.Name}}",
+          "description": "k8s-{{.Name}}",
           "admin-state": "enable",
-          "type": "{{`{{ .Type }}`}}",
-      {{`{{- if ne 0 (len .Interfaces)}}`}}
+          "type": "{{ .Type }}",
+      {{- if ne 0 (len .Interfaces)}}
           "interface": [
-        {{`{{- range $index, $interface := .Interfaces}}`}}
-            {{`{{- if $index}}`}},{{`{{- end}}`}}
+        {{- range $index, $interface := .Interfaces}}
+            {{- if $index}},{{- end}}
             {
-              "name": "{{`{{ (ifName $interface.Name) }}`}}.{{`{{ $interface.ID}}`}}"
+              "name": "{{ (ifName $interface.Name) }}.{{ $interface.ID}}"
             }
-        {{`{{- end}}`}}
-          ]{{`{{- if .Protocols}}`}},{{`{{ end }}`}}
-      {{`{{- end }}`}}
-      {{`{{- if .VXLANInterface }}`}}
+        {{- end}}
+          ]{{- if .Protocols}},{{ end }}
+      {{- end }}
+      {{- if .VXLANInterface }}
           "vxlan-interface": [
             {
-              "name": "{{`{{ (ifName .VXLANInterface.Name) }}`}}.{{`{{ .VXLANInterface.ID }}`}}"
+              "name": "{{ (ifName .VXLANInterface.Name) }}.{{ .VXLANInterface.ID }}"
             }
           ],
-      {{`{{- end }}`}}
-      {{`{{- if .Protocols }}`}}
+      {{- end }}
+      {{- if .Protocols }}
           "protocols": {
-        {{`{{- if .Protocols.BGP }}`}}
+        {{- if .Protocols.BGP }}
             "bgp": {
-              {{`{{- template "srlnetworkinstancebgp" $.Protocols.BGP}}`}}
-            }{{`{{- if .Protocols.BGPVPN }}`}},{{`{{end}}`}}
-        {{`{{- end }}`}}
-        {{`{{- if .Protocols.BGPVPN }}`}}
+              {{- template "srlnetworkinstancebgp" $.Protocols.BGP}}
+            }{{- if .Protocols.BGPVPN }},{{end}}
+        {{- end }}
+        {{- if .Protocols.BGPVPN }}
             "bgp-vpn": {
-              {{`{{- template "srlnetworkinstancebgpvpn" $.Protocols.BGPVPN}}`}}
-            }{{`{{- if .Protocols.BGPEVPN }}`}},{{`{{end}}`}}
-        {{`{{- end }}`}}
-        {{`{{- if .Protocols.BGPEVPN }}`}}
+              {{- template "srlnetworkinstancebgpvpn" $.Protocols.BGPVPN}}
+            }{{- if .Protocols.BGPEVPN }},{{end}}
+        {{- end }}
+        {{- if .Protocols.BGPEVPN }}
             "bgp-evpn": {
-              {{`{{- template "srlnetworkinstancebgpevpn" $.Protocols.BGPEVPN}}`}}
+              {{- template "srlnetworkinstancebgpevpn" $.Protocols.BGPEVPN}}
             }
-        {{`{{- end }}`}}
+        {{- end }}
           }
-      {{`{{- end }}`}}
-    {{`{{- end}}`}}
+      {{- end }}
+    {{- end}}
   srl_networkinstance_bgp.tmpl: |2-
-      {{`{{define "srlnetworkinstancebgp"}}`}}
+      {{define "srlnetworkinstancebgp"}}
               "admin-state": "enable",
-              "autonomous-system": {{`{{.AS}}`}},
-              "router-id": "{{`{{.RouterID}}`}}",
-            {{`{{- if .DynamicNeighbors }}`}}
+              "autonomous-system": {{.AS}},
+              "router-id": "{{.RouterID}}",
+            {{- if .DynamicNeighbors }}
               "dynamic-neighbors": {
                 "accept": {
                   "match": [
-                {{`{{- range $index, $prefix := .DynamicNeighbors.PeerPrefixes }}`}}
-                  {{`{{- if $index}}`}},{{`{{- end}}`}}
+                {{- range $index, $prefix := .DynamicNeighbors.PeerPrefixes }}
+                  {{- if $index}},{{- end}}
                     {
-                      "prefix": "{{`{{ $prefix }}`}}",
-                      "peer-group": "{{`{{$.DynamicNeighbors.PeerGroup}}`}}",
+                      "prefix": "{{ $prefix }}",
+                      "peer-group": "{{$.DynamicNeighbors.PeerGroup}}",
                       "allowed-peer-as": [
-                        "{{`{{$.DynamicNeighbors.PeerAS}}`}}"
+                        "{{$.DynamicNeighbors.PeerAS}}"
                       ]
                     }
-                {{`{{- end }}`}}
+                {{- end }}
                   ]
                 }
               },
-            {{`{{- end}}`}}
+            {{- end}}
               "preference": {
                   "ebgp": 100,
                   "ibgp": 170
@@ -479,139 +475,139 @@ data:
                 "import-reject-all": false,
                 "export-reject-all": false
                 },
-            {{`{{- range $index, $element := .PeerGroups}}`}}
-            {{`{{- if eq "underlay" $element.Name }}`}}
+            {{- range $index, $element := .PeerGroups}}
+            {{- if eq "underlay" $element.Name }}
               "afi-safi": [
-            {{`{{- range $index, $af := $element.AddressFamilies}}`}}
+            {{- range $index, $af := $element.AddressFamilies}}
                 {
-                  "afi-safi-name": "{{`{{ $af }}`}}",
-                  "admin-state": "enable"{{`{{- if or (eq $af "ipv4-unicast") (eq $af "ipv6-unicast")}}`}},{{`{{- end }}`}}
-              {{`{{- if or (eq $af "ipv4-unicast") (eq $af "ipv6-unicast")}}`}}
+                  "afi-safi-name": "{{ $af }}",
+                  "admin-state": "enable"{{- if or (eq $af "ipv4-unicast") (eq $af "ipv6-unicast")}},{{- end }}
+              {{- if or (eq $af "ipv4-unicast") (eq $af "ipv6-unicast")}}
                   "multipath": {
                     "allow-multiple-as": true,
                     "max-paths-level-1": 64,
                     "max-paths-level-2": 64
                   }
-              {{`{{- end }}`}}
-                }{{`{{- if lt $index (dec (len $element.AddressFamilies))}}`}},{{`{{end}}`}}
-              {{`{{- end }}`}}
+              {{- end }}
+                }{{- if lt $index (dec (len $element.AddressFamilies))}},{{end}}
+              {{- end }}
               ],
-            {{`{{- end }}`}}
-            {{`{{- end }}`}}
+            {{- end }}
+            {{- end }}
               "group": [
-            {{`{{- range $index, $element := .PeerGroups}}`}}
-               {{`{{- if $index}}`}},{{`{{- end}}`}}
+            {{- range $index, $element := .PeerGroups}}
+               {{- if $index}},{{- end}}
                 {
-                  {{`{{- template "srlnetworkinstancebgppeergroup" .}}`}}
+                  {{- template "srlnetworkinstancebgppeergroup" .}}
                 }
-            {{`{{- end }}`}}
+            {{- end }}
               ],
               "neighbor":[
-            {{`{{- range $index, $element := .Neighbors}}`}}
-              {{`{{- if $index}}`}},{{`{{- end}}`}}
+            {{- range $index, $element := .Neighbors}}
+              {{- if $index}},{{- end}}
                 {
-                  {{`{{- template "srlnetworkinstancebgpneighbor" .}}`}}
+                  {{- template "srlnetworkinstancebgpneighbor" .}}
                 }
-          {{`{{- end}}`}}
+          {{- end}}
               ]
-    {{`{{- end}}`}}
+    {{- end}}
   srl_networkinstance_bgp_neighbor.tmpl: |2-
-      {{`{{define "srlnetworkinstancebgpneighbor"}}`}}
-            {{`{{- if ne .LocalAS 0}}`}}
+      {{define "srlnetworkinstancebgpneighbor"}}
+            {{- if ne .LocalAS 0}}
                   "local-as": {
-                    "as-number": "{{`{{.LocalAS}}`}}", "prepend-global-as": false
+                    "as-number": "{{.LocalAS}}", "prepend-global-as": false
                   },
-            {{`{{- end}}`}}
-                  "peer-address": "{{`{{.PeerAddress}}`}}",
-                  "peer-as": {{`{{.PeerAS}}`}},
-                  "peer-group": "{{`{{.PeerGroup}}`}}"{{`{{- if ne .LocalAddress ""}}`}},{{`{{end}}`}}
-            {{`{{- if ne .LocalAddress ""}}`}}
+            {{- end}}
+                  "peer-address": "{{.PeerAddress}}",
+                  "peer-as": {{.PeerAS}},
+                  "peer-group": "{{.PeerGroup}}"{{- if ne .LocalAddress ""}},{{end}}
+            {{- if ne .LocalAddress ""}}
                   "transport":{
-                    "local-address": "{{`{{.LocalAddress}}`}}"
+                    "local-address": "{{.LocalAddress}}"
                   }
-            {{`{{- end}}`}}
-    {{`{{- end}}`}}
+            {{- end}}
+    {{- end}}
   srl_networkinstance_bgp_peergroup.tmpl: |2-
-      {{`{{define "srlnetworkinstancebgppeergroup"}}`}}
-                  "group-name": "{{`{{.Name}}`}}",
-                  "export-policy": "{{`{{.Name}}`}}",
+      {{define "srlnetworkinstancebgppeergroup"}}
+                  "group-name": "{{.Name}}",
+                  "export-policy": "{{.Name}}",
                   "admin-state": "enable",
                   "next-hop-self": true,
                   "afi-safi": [
-                  {{`{{- range $index, $af := .AddressFamilies}}`}}
-                    {{`{{- if $index}}`}},{{`{{- end}}`}}
+                  {{- range $index, $af := .AddressFamilies}}
+                    {{- if $index}},{{- end}}
                     {
-                      "afi-safi-name": "{{`{{ $af }}`}}",
+                      "afi-safi-name": "{{ $af }}",
                       "admin-state": "enable"
                     }
-                  {{`{{- end }}`}}
-                  ]{{`{{- if .RouteReflector }}`}},{{`{{- end }}`}}
-                  {{`{{- if .RouteReflector }}`}}
+                  {{- end }}
+                  ]{{- if .RouteReflector }},{{- end }}
+                  {{- if .RouteReflector }}
                   "route-reflector": {
                     "client": true,
-                    "cluster-id": "{{`{{ .RouteReflector.ClusterID }}`}}"
+                    "cluster-id": "{{ .RouteReflector.ClusterID }}"
                   }
-                  {{`{{- end }}`}}
-    {{`{{- end}}`}}
+                  {{- end }}
+    {{- end}}
   srl_networkinstance_bgpevpn.tmpl: |-
-    {{`{{define "srlnetworkinstancebgpevpn"}}`}}
+    {{define "srlnetworkinstancebgpevpn"}}
               "bgp-instance": [
                 {
                   "id": 1,
                   "admin-state": "enable",
-                  "vxlan-interface": "{{`{{ (ifName .VXLANInterface) }}`}}.{{`{{ $.EVI}}`}}",
-                  "evi": {{`{{.EVI}}`}},
+                  "vxlan-interface": "{{ (ifName .VXLANInterface) }}.{{ $.EVI}}",
+                  "evi": {{.EVI}},
                   "encapsulation-type": "vxlan"
                 }
               ]
-    {{`{{- end}}`}}
+    {{- end}}
   srl_networkinstance_bgpvpn.tmpl: |-
-    {{`{{define "srlnetworkinstancebgpvpn"}}`}}
+    {{define "srlnetworkinstancebgpvpn"}}
               "bgp-instance": [
                 {
                   "id": 1,
                   "route-target": {
-                    "export-rt": "{{`{{.ExportRouteTarget}}`}}",
-                    "import-rt": "{{`{{.ImportRouteTarget}}`}}"
+                    "export-rt": "{{.ExportRouteTarget}}",
+                    "import-rt": "{{.ImportRouteTarget}}"
                   }
                 }
               ]
-    {{`{{- end}}`}}
+    {{- end}}
   srl_routingpolicy.tmpl: |-
-    {{`{{define "srlroutingpolicy"}}`}}
-    {{`{{- if ne 0 (len $.RoutingPolicies)}}`}}
+    {{define "srlroutingpolicy"}}
+    {{- if ne 0 (len $.RoutingPolicies)}}
         "prefix-set": [
-        {{`{{- range $index, $rp := .RoutingPolicies}}`}}
+        {{- range $index, $rp := .RoutingPolicies}}
           {
-            "name": "{{`{{$rp.Name}}`}}-ipv4",
+            "name": "{{$rp.Name}}-ipv4",
             "prefix": [
-            {{`{{- range $index, $ipv4 := $rp.IPv4Prefixes}}`}}
+            {{- range $index, $ipv4 := $rp.IPv4Prefixes}}
               {
-                "ip-prefix": "{{`{{$ipv4}}`}}",
+                "ip-prefix": "{{$ipv4}}",
                 "mask-length-range": "32..32"
-              }{{`{{if lt $index (dec (len $rp.IPv4Prefixes))}}`}},{{`{{end}}`}}
-            {{`{{- end}}`}}
+              }{{if lt $index (dec (len $rp.IPv4Prefixes))}},{{end}}
+            {{- end}}
             ]
           },
           {
-            "name": "{{`{{$rp.Name}}`}}-ipv6",
+            "name": "{{$rp.Name}}-ipv6",
             "prefix": [
-            {{`{{- range $index, $ipv6 := $rp.IPv6Prefixes}}`}}
+            {{- range $index, $ipv6 := $rp.IPv6Prefixes}}
               {
-                "ip-prefix": "{{`{{$ipv6}}`}}",
+                "ip-prefix": "{{$ipv6}}",
                 "mask-length-range": "128..128"
-              }{{`{{if lt $index (dec (len $rp.IPv6Prefixes))}}`}},{{`{{end}}`}}
-            {{`{{- end}}`}}
+              }{{if lt $index (dec (len $rp.IPv6Prefixes))}},{{end}}
+            {{- end}}
             ]
-          }{{`{{if lt $index (dec (len $.RoutingPolicies))}}`}},{{`{{end}}`}}
-        {{`{{- end}}`}}
+          }{{if lt $index (dec (len $.RoutingPolicies))}},{{end}}
+        {{- end}}
         ],
         "policy": [
-        {{`{{- range $index, $rp := .RoutingPolicies}}`}}
+        {{- range $index, $rp := .RoutingPolicies}}
           {
-            "name": "{{`{{.Name}}`}}",
+            "name": "{{.Name}}",
             "statement": [
-             {{`{{- if ne 0 (len $rp.IPv4Prefixes)}}`}}
+             {{- if ne 0 (len $rp.IPv4Prefixes)}}
               {
                 "name": "10",
                 "match": {
@@ -620,9 +616,9 @@ data:
                 "action": {
                   "policy-result": "accept"
                 }
-              }{{`{{- if ne 0 (len $rp.IPv6Prefixes)}}`}},{{`{{end}}`}}
-            {{`{{- end}}`}}
-            {{`{{- if ne 0 (len $rp.IPv6Prefixes)}}`}}
+              }{{- if ne 0 (len $rp.IPv6Prefixes)}},{{end}}
+            {{- end}}
+            {{- if ne 0 (len $rp.IPv6Prefixes)}}
               {
                 "name": "20",
                 "match": {
@@ -632,64 +628,69 @@ data:
                   "policy-result": "accept"
                 }
               }
-            {{`{{- end}}`}}
+            {{- end}}
             ]
-          }{{`{{if lt $index (dec (len $.RoutingPolicies))}}`}},{{`{{end}}`}}
-        {{`{{- end}}`}}
+          }{{if lt $index (dec (len $.RoutingPolicies))}},{{end}}
+        {{- end}}
         ]
-    {{`{{- end}}`}}
-    {{`{{- end}}`}}
+    {{- end}}
+    {{- end}}
   srl_system.tmpl: |-
-    {{`{{define "srlsystem"}}`}}
-      {{`{{- if .Protocols }}`}}
+    {{define "srlsystem"}}
+      {{- if .Protocols }}
         "network-instance": {
           "protocols": {
-          {{`{{- if .Protocols.BGPVPN }}`}}
+          {{- if .Protocols.BGPVPN }}
             "bgp-vpn": {
-            {{`{{- template "srlsystemprotocolsbgpvpn" .Protocols.BGPVPN}}`}}
-            }{{`{{- if .Protocols.BGPEVPN }}`}},{{`{{ end }}`}}
-          {{`{{- end }}`}}
-          {{`{{- if .Protocols.BGPEVPN }}`}}
+            {{- template "srlsystemprotocolsbgpvpn" .Protocols.BGPVPN}}
+            }{{- if .Protocols.BGPEVPN }},{{ end }}
+          {{- end }}
+          {{- if .Protocols.BGPEVPN }}
             "evpn": {
-            {{`{{- template "srlsystemprotocolsbgpevpn" .Protocols.BGPEVPN}}`}}
+            {{- template "srlsystemprotocolsbgpevpn" .Protocols.BGPEVPN}}
             }
-          {{`{{- end }}`}}
+          {{- end }}
           }
         }
-      {{`{{- end }}`}}
-    {{`{{- end }}`}}
+      {{- end }}
+    {{- end }}
   srl_system_protocols_bgpevpn.tmpl: |-
-    {{`{{define "srlsystemprotocolsbgpevpn"}}`}}
-    {{`{{- end }}`}}
+    {{define "srlsystemprotocolsbgpevpn"}}
+    {{- end }}
   srl_system_protocols_bgpvpn.tmpl: |-
-    {{`{{define "srlsystemprotocolsbgpvpn"}}`}}
+    {{define "srlsystemprotocolsbgpvpn"}}
               "bgp-instance": [
                 {
                   "id": 1
                 }
               ]
-    {{`{{- end }}`}}
+    {{- end }}
   srl_tunnel_interface.tmpl: |-
-    {{`{{define "srltunnelinterface"}}`}}
-          "name": "{{`{{ (ifName .Name ) }}`}}"{{`{{- if ne 0 (len $.SubInterfaces)}}`}},{{`{{end}}`}}
-          {{`{{- if ne 0 (len $.SubInterfaces)}}`}}
+    {{define "srltunnelinterface"}}
+          "name": "{{ (ifName .Name ) }}"{{- if ne 0 (len $.SubInterfaces)}},{{end}}
+          {{- if ne 0 (len $.SubInterfaces)}}
           "vxlan-interface": [
-          {{`{{- range $index, $subinterface := .SubInterfaces}}`}}
+          {{- range $index, $subinterface := .SubInterfaces}}
             {
-              {{`{{- template "srltunnelsubinterface" .}}`}}
-            }{{`{{if lt $index (dec (len $.SubInterfaces))}}`}},{{`{{end}}`}}
-          {{`{{- end}}`}}
+              {{- template "srltunnelsubinterface" .}}
+            }{{if lt $index (dec (len $.SubInterfaces))}},{{end}}
+          {{- end}}
           ]
-          {{`{{- end}}`}}
-    {{`{{- end}}`}}
+          {{- end}}
+    {{- end}}
   srl_tunnel_subinterfaces.tmpl: |-
-    {{`{{define "srltunnelsubinterface"}}`}}
-              "index": {{`{{.ID}}`}},
-              "type": "{{`{{.Type}}`}}",
+    {{define "srltunnelsubinterface"}}
+              "index": {{.ID}},
+              "type": "{{.Type}}",
               "ingress": {
-                "vni": {{`{{.ID}}`}}
+                "vni": {{.ID}}
               }
-    {{`{{- end}}`}}
+    {{- end}}
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: gotemplates-srl
+  namespace: kuid-system
 
 ---
 apiVersion: v1

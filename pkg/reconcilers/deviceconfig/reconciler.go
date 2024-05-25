@@ -19,7 +19,7 @@ package deviceconfig
 import (
 	"bytes"
 	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -27,7 +27,6 @@ import (
 	"github.com/henderiw/logger/log"
 	conditionv1alpha1 "github.com/kuidio/kuid/apis/condition/v1alpha1"
 	"github.com/kuidio/kuid/pkg/reconcilers/resource"
-	"github.com/kuidio/kuid/pkg/resources"
 	netwv1alpha1 "github.com/kuidio/kuidapps/apis/network/v1alpha1"
 	invv1alpha1 "github.com/kuidio/nokia-srl/apis/inv/v1alpha1"
 	"github.com/kuidio/nokia-srl/pkg/parser"
@@ -43,8 +42,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/yaml"
 )
 
 func init() {
@@ -82,7 +79,6 @@ func (r *reconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, c i
 	return nil, ctrl.NewControllerManagedBy(mgr).
 		Named(controllerName).
 		For(&netwv1alpha1.NetworkDevice{}).
-		Owns(&configv1alpha1.Config{}).
 		Complete(r)
 }
 
@@ -115,30 +111,11 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if !cr.GetDeletionTimestamp().IsZero() {
-		if err := r.delete(ctx, cr); err != nil {
-			r.handleError(ctx, cr, "canot delete resources", err)
-			return reconcile.Result{Requeue: true}, perrors.Wrap(r.Client.Status().Update(ctx, cr), errUpdateStatus)
-		}
-
-		if err := r.finalizer.RemoveFinalizer(ctx, cr); err != nil {
-			r.handleError(ctx, cr, "cannot remove finalizer", err)
-			return ctrl.Result{Requeue: true}, perrors.Wrap(r.Client.Status().Update(ctx, cr), errUpdateStatus)
-		}
 		log.Debug("Successfully deleted resource")
 		return ctrl.Result{}, nil
 	}
 
-	if err := r.finalizer.AddFinalizer(ctx, cr); err != nil {
-		r.handleError(ctx, cr, "cannot add finalizer", err)
-		return ctrl.Result{Requeue: true}, perrors.Wrap(r.Client.Status().Update(ctx, cr), errUpdateStatus)
-	}
-
 	if err := r.apply(ctx, cr); err != nil {
-		if errd := r.delete(ctx, cr); errd != nil {
-			err = errors.Join(err, errd)
-			r.handleError(ctx, cr, "cannot delete resources after populate failed", err)
-			return reconcile.Result{Requeue: true}, perrors.Wrap(r.Client.Status().Update(ctx, cr), errUpdateStatus)
-		}
 		r.handleError(ctx, cr, "cannot apply topology resources", err)
 		return ctrl.Result{}, perrors.Wrap(r.Client.Status().Update(ctx, cr), errUpdateStatus)
 	}
@@ -162,19 +139,6 @@ func (r *reconciler) handleError(ctx context.Context, cr *netwv1alpha1.NetworkDe
 }
 
 func (r *reconciler) apply(ctx context.Context, cr *netwv1alpha1.NetworkDevice) error {
-	resources := resources.New(r.Client, resources.Config{
-		Owns: []schema.GroupVersionKind{
-			configv1alpha1.SchemeGroupVersion.WithKind(configv1alpha1.ConfigKind),
-		},
-	})
-
-	/*
-		nds, err := r.getNetworkDeviceConfigs(ctx, cr)
-		if err != nil {
-			return err
-		}
-		for _, nd := range nds {
-	*/
 	var buf bytes.Buffer
 	if err := r.parser.Render(ctx, cr, &buf); err != nil {
 		return err
@@ -202,46 +166,16 @@ func (r *reconciler) apply(ctx context.Context, cr *netwv1alpha1.NetworkDevice) 
 		},
 		configv1alpha1.ConfigStatus{},
 	)
-	b, err := yaml.Marshal(cfg)
+	b, err := json.Marshal(cfg)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(b))
-	//}
-
-	return resources.APIApply(ctx, cr)
-}
-
-func (r *reconciler) delete(ctx context.Context, cr *netwv1alpha1.NetworkDevice) error {
-	resources := resources.New(r.Client, resources.Config{
-		Owns: []schema.GroupVersionKind{
-			configv1alpha1.SchemeGroupVersion.WithKind(configv1alpha1.ConfigKind),
-		},
-	})
-
-	return resources.APIDelete(ctx, cr)
-}
-
-/*
-	func (r *reconciler) getNetworkDeviceConfigs(ctx context.Context, cr *netwv1alpha1.Network) ([]*netwv1alpha1.NetworkDevice, error) {
-		nds := []*netwv1alpha1.NetworkDevice{}
-
-		opts := []client.ListOption{
-			client.InNamespace(cr.Namespace),
-		}
-		ndList := &netwv1alpha1.NetworkDeviceList{}
-		if err := r.Client.List(ctx, ndList, opts...); err != nil {
-			return nil, fmt.Errorf("cannot get nodeModel from api, err: %s", err.Error())
-		}
-
-		for _, nd := range ndList.Items {
-			if strings.HasPrefix(nd.Name, cr.Name) {
-				nds = append(nds, &nd)
-			}
-		}
-		return nds, nil
+	cr.Status.ProviderConfig = &runtime.RawExtension{
+		Raw: b,
 	}
-*/
+	return nil
+}
+
 func getNodeName(name string) string {
 	lastDotIndex := strings.LastIndex(name, ".")
 	if lastDotIndex == -1 {

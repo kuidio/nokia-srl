@@ -55,7 +55,7 @@ COPY --from=builder /etc/passwd /etc/group /etc/shadow /etc/
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 #
 COPY --from=builder --chown=$USERID:$USERID /workspace/nokia-srl /app/
-COPY templates /app/templates
+#COPY templates /app/templates
 WORKDIR /app
 # from now on, run as the unprivileged user
 USER $USERID

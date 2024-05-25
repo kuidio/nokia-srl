@@ -52,3 +52,11 @@ spec:
           value: "true"
         - name: ENABLE_DEVICECONFIG
           value: "true"
+        volumeMounts:
+        - name: gotemplates-volume
+          mountPath: /app/templates
+          readOnly: true
+      volumes:
+      - name: gotemplates-volume
+        configMap:
+          name: gotemplates-srl

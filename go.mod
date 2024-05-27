@@ -4,7 +4,7 @@ go 1.22.2
 
 require (
 	github.com/henderiw/logger v0.0.0-20230911123436-8655829b1abe
-	github.com/kuidio/kuid v0.0.4-0.20240525154818-41d09e8176dd
+	github.com/kuidio/kuid v0.0.4
 	github.com/kuidio/kuidapps v0.0.4-0.20240525173854-13e19b1e5a69
 	github.com/pkg/errors v0.9.1
 	github.com/sdcio/config-server v0.0.22

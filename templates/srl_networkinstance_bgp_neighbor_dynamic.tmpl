@@ -1,5 +1,5 @@
 {{define "srlnetworkinstancebgpneighbordynamic"}}
-              "name": "{{ .Name }}",
+              "interface-name": "{{ (ifName .SubInterfaceName.Name) }}.{{ .SubInterfaceName.ID}}",
               "peer-group": "{{ .PeerGroup }}",
               "allowed-peer-as": [
                   "{{ .PeerAS }}"

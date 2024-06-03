@@ -1,0 +1,20 @@
+{{define "srlnetworkinstanceospfinstance"}}
+              "name": "{{ .Name }}",
+              "admin-state": "enable",
+        {{- if eq .Version "v2" }}
+              "version": "ospf-v2",
+        {{- else }}
+              "version": "ospf-v3",
+        {{- end }}
+              "router-id": "{{ .RouterID }}",
+        {{- if ne 0 (len .Areas)}}
+              "area": [
+          {{- range $index, $area := .Areas}}
+                {{- if $index}},{{- end}}
+                {
+                  {{- template "srlnetworkinstanceospfinstancearea" $area}}
+                }
+          {{- end}}
+              ]
+        {{- end }}
+{{- end}}

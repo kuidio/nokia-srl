@@ -1,0 +1,12 @@
+{{define "srlnetworkinstanceisis"}}
+      {{- if ne 0 (len .Instances)}}
+          "instance": [
+        {{- range $index, $instance := .Instances}}
+            {{- if $index}},{{- end}}
+            {
+              {{- template "srlnetworkinstanceisisinstance" $instance}}
+            }
+        {{- end}}
+          ]
+      {{- end }}
+{{- end}}

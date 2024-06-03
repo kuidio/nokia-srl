@@ -1,0 +1,7 @@
+{{define "srlnetworkinstancebgpneighbordynamic"}}
+              "name": "{{ .Name }}",
+              "peer-group": "{{ .PeerGroup }}",
+              "allowed-peer-as": [
+                  "{{ .PeerAS }}"
+              ]
+{{- end}}

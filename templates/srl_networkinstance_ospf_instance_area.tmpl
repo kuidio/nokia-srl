@@ -1,0 +1,13 @@
+{{define "srlnetworkinstanceospfinstancearea"}}
+                  "area-id": "{{ .Name }}",
+            {{- if ne 0 (len .Interfaces)}}
+                  "interface": [
+              {{- range $index, $itfce := .Interfaces}}
+                    {{- if $index}},{{- end}}
+                    {
+                      {{- template "srlnetworkinstanceospfinstanceareainterface" $itfce}}
+                    }
+              {{- end}}
+                  ]
+            {{- end }}
+{{- end}}

@@ -31,6 +31,11 @@
     {{- if .IPv6 }}
           "ipv6":{
             "admin-state": "enable",
+            "router-advertisement": {
+              "router-role": {
+                "admin-state": "enable"
+              }
+            }{{- if ne 0 (len .IPv6.Addresses)}},{{end}}
             {{- if ne 0 (len .IPv6.Addresses)}}
             "address": [
             {{- range $index, $address := .IPv6.Addresses}}

@@ -22,6 +22,16 @@
   {{- end }}
   {{- if .Protocols }}
       "protocols": {
+    {{- if .Protocols.ISIS }}
+        "isis": {
+          {{- template "srlnetworkinstanceisis" $.Protocols.ISIS}}
+        }{{- if .Protocols.ISIS }},{{end}}
+    {{- end }}
+    {{- if .Protocols.OSPF }}
+        "ospf": {
+          {{- template "srlnetworkinstanceospf" $.Protocols.OSPF}}
+        }{{- if .Protocols.OSPF }},{{end}}
+    {{- end }}
     {{- if .Protocols.BGP }}
         "bgp": {
           {{- template "srlnetworkinstancebgp" $.Protocols.BGP}}

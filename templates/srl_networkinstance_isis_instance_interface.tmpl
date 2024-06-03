@@ -1,0 +1,14 @@
+{{define "srlnetworkinstanceisisinstanceinterface"}}
+                  "name": "{{ (ifName .SubInterfaceName.Name) }}.{{ .SubInterfaceName.ID}}",
+                  "admin-state": "enable",
+            {{- if .Passive }}
+                  "passive": {{.Passive}},
+            {{- else }}
+                  "circuit-type": "{{ .Type }}",
+            {{- end }}
+                  "level": [
+                    {
+                      "level-number": {{.Level}}
+                    }
+                  ]
+{{- end}}

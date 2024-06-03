@@ -1,0 +1,9 @@
+{{define "srlnetworkinstanceospfinstanceareainterface"}}
+                      "interface-name": "{{ (ifName .SubInterfaceName.Name) }}.{{ .SubInterfaceName.ID}}",
+                      "admin-state": "enable",
+            {{- if .Passive }}
+                      "passive": {{.Passive}}
+            {{- else }}
+                      "interface-type": "{{ .Type }}"
+            {{- end }}
+{{- end}}

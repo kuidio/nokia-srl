@@ -1,0 +1,37 @@
+{{define "srlnetworkinstanceisisinstance"}}
+              "name": "{{ .Name }}",
+              "admin-state": "enable",
+              "level-capability": "{{ .LevelCapability }}",
+        {{- if ne 0 (len .Net)}}
+              "net": [
+          {{- range $index, $net := .Net}}
+                {{- if $index}},{{- end}}
+                "{{ $net }}"
+          {{- end}}
+              ],
+        {{- end }}
+        {{- range $index, $af := .AddressFamilies}}
+              {{- if $index}},{{- end}}
+           {{- if eq $af "ipv4-unicast" }}
+              "ipv4-unicast": {
+                "admin-state": "enable"
+              }
+           {{- end}}
+           {{- if eq $af "ipv6-unicast" }}
+              "ipv6-unicast": {
+                "admin-state": "enable"
+              }
+           {{- end}}
+        {{- end }}
+        {{- if ne 0 (len .Interfaces)}}
+              ,
+              "interfaces": [
+        {{- range $index, $itfce := .Interfaces}}
+                {{- if $index}},{{- end}}
+                {
+                  {{- template "srlnetworkinstanceisisinstanceinterface" $itfce}}
+                }
+        {{- end}}
+              ]
+      {{- end }}
+{{- end}}

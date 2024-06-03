@@ -6,18 +6,26 @@
           "dynamic-neighbors": {
             "accept": {
               "match": [
-            {{- range $index, $prefix := .DynamicNeighbors.PeerPrefixes }}
+           {{- range $index, $prefix := .DynamicNeighbors.Prefixes }}
               {{- if $index}},{{- end}}
                 {
                   "prefix": "{{ $prefix }}",
-                  "peer-group": "{{$.DynamicNeighbors.PeerGroup}}",
+                  "peer-group": "{{ $.DynamicNeighbors.PeerGroup }}",
                   "allowed-peer-as": [
                     "{{$.DynamicNeighbors.PeerAS}}"
                   ]
                 }
-            {{- end }}
+           {{- end }}
               ]
-            }
+            },
+            "interface": [
+          {{- range $index, $element := .DynamicNeighbors.Interfaces }}
+              {{- if $index}},{{- end}}
+              {
+                {{- template "srlnetworkinstancebgpneighbordynamic" .}}
+              }
+          {{- end}}
+            ]
           },
         {{- end}}
           "preference": {
@@ -61,6 +69,6 @@
             {
               {{- template "srlnetworkinstancebgpneighbor" .}}
             }
-      {{- end}}
+        {{- end}}
           ]
 {{- end}}

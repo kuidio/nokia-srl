@@ -36,10 +36,9 @@
             "import-reject-all": false,
             "export-reject-all": false
             },
-        {{- range $index, $element := .PeerGroups}}
-        {{- if eq "underlay" $element.Name }}
           "afi-safi": [
-        {{- range $index, $af := $element.AddressFamilies}}
+        {{- range $index, $af := .AddressFamilies}}
+          {{- if $index}},{{- end}}
             {
               "afi-safi-name": "{{ $af }}",
               "admin-state": "enable"{{- if or (eq $af "ipv4-unicast") (eq $af "ipv6-unicast")}},{{- end }}
@@ -50,11 +49,9 @@
                 "max-paths-level-2": 64
               }
           {{- end }}
-            }{{- if lt $index (dec (len $element.AddressFamilies))}},{{end}}
-          {{- end }}
+            }
+        {{- end }}
           ],
-        {{- end }}
-        {{- end }}
           "group": [
         {{- range $index, $element := .PeerGroups}}
            {{- if $index}},{{- end}}

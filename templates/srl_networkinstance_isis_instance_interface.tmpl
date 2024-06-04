@@ -1,14 +1,21 @@
 {{define "srlnetworkinstanceisisinstanceinterface"}}
-                  "name": "{{ (ifName .SubInterfaceName.Name) }}.{{ .SubInterfaceName.ID}}",
+                  "interface-name": "{{ (ifName .SubInterfaceName.Name) }}.{{ .SubInterfaceName.ID}}",
                   "admin-state": "enable",
             {{- if .Passive }}
                   "passive": {{.Passive}},
+                  "circuit-type": "point-to-point",
             {{- else }}
-                  "circuit-type": "{{ .Type }}",
+                  "circuit-type": "point-to-point",
             {{- end }}
                   "level": [
                     {
                       "level-number": {{.Level}}
                     }
-                  ]
+                  ],
+                  "ipv4-unicast": {
+                    "admin-state": "enable"
+                  },
+                  "ipv6-unicast": {
+                    "admin-state": "enable"
+                  }
 {{- end}}

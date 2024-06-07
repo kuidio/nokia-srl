@@ -20,7 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"reflect"
+	"time"
 
 	"github.com/henderiw/logger/log"
 	"github.com/kuidio/kuid/apis/backend"
@@ -37,6 +39,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -140,9 +143,26 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, perrors.Wrap(r.Client.Update(ctx, cr), errUpdateStatus)
 	}
 
+	r.generateSystemID(ctx, cr)
 	cr.SetConditions(conditionv1alpha1.Ready())
 	r.recorder.Eventf(cr, corev1.EventTypeNormal, crName, "ready")
 	return ctrl.Result{}, perrors.Wrap(r.Client.Update(ctx, cr), errUpdateStatus)
+}
+
+func (r *reconciler) generateSystemID(_ context.Context, cr *infrabev1alpha1.Node) {
+	if cr.Status.SystemID == nil {
+		// Seed the random number generator
+		rand.Seed(time.Now().UnixNano())
+
+		// Generate random MAC address parts
+		b1 := rand.Intn(256)
+		b2 := rand.Intn(256)
+
+		// Format the random parts into the MAC address
+		macPortion := fmt.Sprintf("%02X:%02X", b1, b2)
+		systemID := fmt.Sprintf("1A:%s:00:00:00", macPortion)
+		cr.Status.SystemID = ptr.To[string](systemID)
+	}
 }
 
 func (r *reconciler) handleError(ctx context.Context, cr *infrabev1alpha1.Node, msg string, err error) {
@@ -205,10 +225,10 @@ func (r *reconciler) getNodeModel(ctx context.Context, cr *infrabev1alpha1.Node)
 
 	key := types.NamespacedName{
 		Namespace: cr.GetNamespace(),
-		Name: fmt.Sprintf("%s.%s", nodeType, cr.GetProvider()),
+		Name:      fmt.Sprintf("%s.%s", nodeType, cr.GetProvider()),
 	}
 	nodeModel := &invv1alpha1.NodeModel{}
-	if err :=  r.Client.Get(ctx, key, nodeModel); err != nil {
+	if err := r.Client.Get(ctx, key, nodeModel); err != nil {
 		return nil, fmt.Errorf("cannot get nodeModel from api, err: %s", err.Error())
 	}
 	return nodeModel, nil

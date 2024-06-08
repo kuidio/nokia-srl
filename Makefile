@@ -80,6 +80,7 @@ artifacts: kform manifests
         $(KFORM) init artifacts; \
     fi
 	$(KFORM) apply artifacts -i artifacts/in/configmap-input-vars.yaml -o artifacts/out/artifacts.yaml
+	go run test2/main.go
 
 .PHONY:
 fix:

@@ -12,8 +12,8 @@ import (
 )
 
 func main() {
-	templateDir := "../templates" // Directory containing your template files
-	outputFile := "../artifacts/configmap-gotemplates-srl.yaml"
+	templateDir := "templates" // Directory containing your template files
+	outputFile := "artifacts/configmap-gotemplates-srl.yaml"
 
 	files, err := os.ReadDir(templateDir)
 	if err != nil {

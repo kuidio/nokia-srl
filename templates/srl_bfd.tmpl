@@ -1,0 +1,39 @@
+{{define "srlbfd"}}
+{{- if ne 0 (len .Interfaces)}}
+      "subinterface": [
+    {{- range $index, $itfce := .Interfaces }}
+    {{- if $index}},{{- end}}
+       {
+        "id": "{{ (ifName $itfce.SubInterfaceName.Name) }}.{{ $itfce.SubInterfaceName.ID}}"
+      {{- if (derefBool $itfce.BFD.Enabled) }}
+        ,
+        "admin-state": "enable"
+      {{- else }}
+        ,
+        "admin-state": "disable"
+      {{- end }}
+      {{- if ne (derefUint32 $itfce.BFD.MinEchoRx) 0 }}
+        ,
+        "minimum-echo-receive-interval": {{ (derefUint32 $itfce.BFD.MinEchoRx) }}
+      {{- end }}
+      {{- if ne (derefUint32 $itfce.BFD.MinRx) 0 }}
+        ,
+        "required-minimum-receive": {{ (derefUint32 $itfce.BFD.MinRx) }}
+      {{- end }}
+      {{- if ne (derefUint32 $itfce.BFD.MinTx) 0 }}
+        ,
+        "desired-minimum-transmit-interval": {{ (derefUint32 $itfce.BFD.MinTx) }}
+      {{- end }}
+      {{- if ne (derefUint32 $itfce.BFD.Multiplier) 0 }}
+        ,
+        "detection-multiplier": {{ (derefUint32 $itfce.BFD.Multiplier) }}
+      {{- end }}
+      {{- if ne (derefUint32 $itfce.BFD.TTL) 0 }}
+        ,
+        "max-hop-count": {{ (derefUint32 $itfce.BFD.TTL) }}
+      {{- end }}
+       }
+    {{- end }}
+      ]
+{{- end }}
+{{- end}}

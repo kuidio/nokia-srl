@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	infrabev1alpha1 "github.com/kuidio/kuid/apis/backend/infra/v1alpha1"
 	"github.com/stoewer/go-strcase"
 )
 
@@ -112,5 +113,30 @@ var templateHelperFunctions = template.FuncMap{
 			return 0
 		}
 		return *p
+	},
+	"derefBool": func(p *bool) bool {
+		if p == nil {
+			return false
+		}
+		return *p
+	},
+	"isisLevel": func(level infrabev1alpha1.ISISLevel) string {
+		return string(level)
+	},
+	"isisMetricStyle": func(metricStyle infrabev1alpha1.ISISMetricStyle) string {
+		if metricStyle == infrabev1alpha1.ISISMetricStyleNarrow {
+			return "narrow"
+		} else {
+			return "wise"
+		}
+	},
+	"networkType": func(networkType infrabev1alpha1.NetworkType) string {
+		switch networkType {
+		case infrabev1alpha1.NetworkTypeBroadcast:
+			return "broadcast"
+		case infrabev1alpha1.NetworkTypeP2P:
+			return "point-to-point"
+		}
+		return "point-to-point"
 	},
 }

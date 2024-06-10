@@ -10,6 +10,25 @@
           {{- end}}
               ],
         {{- end }}
+        {{- if or .Level1 .Level2}}
+              "level": [
+          {{- if .Level1 }}
+                {
+                  "level-number": "1",
+                  "metric-style": "{{ (isisMetricStyle .Level1.MetricStyle )}}"
+                }
+          {{- end }}
+          {{- if .Level2 }}
+                ,
+                {
+                  "level-number": "2",
+                  "metric-style": "{{ (isisMetricStyle .Level1.MetricStyle )}}"
+                }
+          {{- end }}
+               ]
+        {{- end }}
+        {{- if ne 0 (len .AddressFamilies ) }}
+              ,
         {{- range $index, $af := .AddressFamilies}}
               {{- if $index}},{{- end}}
            {{- if eq $af "ipv4-unicast" }}
@@ -22,6 +41,7 @@
                 "admin-state": "enable"
               }
            {{- end}}
+        {{- end }}
         {{- end }}
         {{- if ne 0 (len .Interfaces)}}
               ,

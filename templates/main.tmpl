@@ -1,10 +1,10 @@
 {
-  {{- if .System }}
+{{- if .System }}
   "system": {
     {{- template "srlsystem" .System}}
   },
-  {{- end }}
-  {{- if ne 0 (len .Interfaces)}}
+{{- end }}
+{{- if ne 0 (len .Interfaces)}}
   "interface": [
   {{- range $index, $interface := .Interfaces}}
     {{- if $index}},{{- end}}
@@ -13,8 +13,8 @@
     }
   {{- end}}
   ]{{if ne 0 (len $.NetworkInstances)}},{{end}}
-  {{- end}}
-  {{- if ne 0 (len $.NetworkInstances)}}
+{{- end}}
+{{- if ne 0 (len $.NetworkInstances)}}
   "network-instance": [
   {{- range $index, $ni := .NetworkInstances}}
     {{- if $index}},{{- end}}
@@ -23,13 +23,13 @@
     }
   {{- end}}
   ]{{if or (ne 0 (len $.RoutingPolicies)) (ne 0 (len $.TunnelInterfaces)) }},{{end}}
-  {{- end}}
-  {{- if ne 0 (len $.RoutingPolicies)}}
+{{- end}}
+{{- if ne 0 (len $.RoutingPolicies)}}
   "routing-policy": {
       {{- template "srlroutingpolicy" .}}
   },
-  {{- end}}
-  {{- if ne 0 (len $.TunnelInterfaces)}}
+{{- end}}
+{{- if ne 0 (len $.TunnelInterfaces)}}
   "tunnel-interface": [
   {{- range $index, $interface := .TunnelInterfaces}}
     {{- if $index}},{{- end}}
@@ -38,5 +38,11 @@
     }
   {{- end}}
   ]
-  {{- end}}
+{{- end}}
+{{- if .BFD }}
+  ,
+  "bfd": {
+    {{- template "srlbfd" .BFD}}
+  }
+{{- end}}
 }

@@ -3,19 +3,67 @@
                   "admin-state": "enable",
             {{- if .Passive }}
                   "passive": {{.Passive}},
-                  "circuit-type": "point-to-point",
+                  "circuit-type": "{{ (networkType .NetworkType) }}",
             {{- else }}
-                  "circuit-type": "point-to-point",
+                  "circuit-type": "{{ (networkType .NetworkType) }}",
             {{- end }}
                   "level": [
+            {{- if .Level1 }}
                     {
-                      "level-number": {{.Level}}
+                      "level-number": "1"
+                  {{- if ne 0 .Level1.Metric }}
+                      ,
+                      "metric": {{ .Level1.Metric }}
+                  {{- end }}
+                  {{- if ne 0 .Level1.MetricIPv6Unicast }}
+                      ,
+                      "ipv6-unicast-metric": {{ .Level1.MetricIPv6Unicast }}
+                  {{- end }}
+                   {{- if ne 0 .Level1.Disable }}
+                      ,
+                      "disable": {{ .Level1.Disable }}
+                  {{- end }}
                     }
-                  ],
+            {{- end }}
+            {{- if .Level2 }}
+                    ,
+                    {
+                      "level-number": "2"
+                  {{- if ne 0 .Level2.Metric }}
+                      ,
+                      "metric": {{ .Level2.Metric }}
+                  {{- end }}
+                  {{- if ne 0 .Level2.MetricIPv6Unicast }}
+                      ,
+                      "ipv6-unicast-metric": {{ .Level2.MetricIPv6Unicast }}
+                  {{- end }}
+                   {{- if ne 0 .Level2.Disable }}
+                      ,
+                      "disable": {{ .Level2.Disable }}
+                  {{- end }}
+                    }
+            {{- end }}
+                  ]
+            {{- if .IPv4 }}
+                  ,
                   "ipv4-unicast": {
                     "admin-state": "enable"
-                  },
+               {{- if .IPv4.BFD }}
+                    ,
+                    "enable-bfd": true,
+                    "include-bfd-tlv": true
+               {{- end }}
+                  }
+            {{- end }}
+            {{- if .IPv4 }}
+                  ,
                   "ipv6-unicast": {
                     "admin-state": "enable"
+               {{- if .IPv6.BFD }}
+                    ,
+                    "enable-bfd": true,
+                    "include-bfd-tlv": true
+               {{- end }}
                   }
+            {{- end }}
 {{- end}}

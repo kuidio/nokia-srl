@@ -12,4 +12,10 @@
                 "local-address": "{{.LocalAddress}}"
               }
         {{- end}}
+        {{- if .BFD }}
+              ,
+              "failure-detection": {
+                "enable-bfd": true
+              }
+        {{- end }}
 {{- end}}

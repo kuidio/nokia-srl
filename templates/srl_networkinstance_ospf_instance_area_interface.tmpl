@@ -4,6 +4,12 @@
             {{- if .Passive }}
                       "passive": {{.Passive}}
             {{- else }}
-                      "interface-type": "point-to-point"
+                      "interface-type": "{{ (networkType .NetworkType) }}"
+            {{- end }}
+            {{- if .BFD }}
+                      ,
+                      "failure-detection": {
+                        "enable-bfd": true
+                      }
             {{- end }}
 {{- end}}

@@ -75,12 +75,12 @@ manifests: controller-gen generate ## Generate WebhookConfiguration, ClusterRole
 
 .PHONY: artifacts
 artifacts: kform manifests
+	go run test2/main.go
 	mkdir -p artifacts/out
 	if [ ! -e "artifacts/.kform/kform-inventory.yaml" ]; then \
         $(KFORM) init artifacts; \
     fi
 	$(KFORM) apply artifacts -i artifacts/in/configmap-input-vars.yaml -o artifacts/out/artifacts.yaml
-	go run test2/main.go
 
 .PHONY:
 fix:

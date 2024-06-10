@@ -613,7 +613,7 @@ data:
                   "export-policy": "{{.Name}}",
                   "admin-state": "enable",
                   "next-hop-self": true
-             {{- if ne 0 (len .AddressFamilies)}}
+            {{- if ne 0 (len .AddressFamilies)}}
                   ,
                   "afi-safi": [
                   {{- range $index, $af := .AddressFamilies}}
@@ -624,14 +624,20 @@ data:
                     }
                   {{- end }}
                   ]
-             {{- end }}
-                  {{- if .RouteReflector }}
+            {{- end }}
+            {{- if .RouteReflector }}
                   ,
                   "route-reflector": {
                     "client": true,
                     "cluster-id": "{{ .RouteReflector.ClusterID }}"
                   }
-                  {{- end }}
+            {{- end }}
+            {{- if .BFD }}
+                  ,
+                  "failure-detection": {
+                    "enable-bfd": true
+                  }
+            {{- end }}
     {{- end}}
   srl_networkinstance_bgpevpn.tmpl: |-
     {{define "srlnetworkinstancebgpevpn"}}

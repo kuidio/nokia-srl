@@ -9,7 +9,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sdcio/config-server v0.0.22
 	github.com/spf13/cobra v1.8.0
-	github.com/stoewer/go-strcase v1.2.0
+	github.com/stoewer/go-strcase v1.3.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/mod v0.17.0
 	k8s.io/api v0.30.1

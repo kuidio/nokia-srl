@@ -40,13 +40,21 @@
         {{- range $index, $af := .AddressFamilies}}
           {{- if $index}},{{- end}}
             {
-              "afi-safi-name": "{{ $af }}",
-              "admin-state": "enable"{{- if or (eq $af "ipv4-unicast") (eq $af "ipv6-unicast")}},{{- end }}
-          {{- if or (eq $af "ipv4-unicast") (eq $af "ipv6-unicast")}}
+              "afi-safi-name": "{{ $af.Name }}",
+              "admin-state": "enable"
+          {{- if or (eq $af.Name "ipv4-unicast") (eq $af.Name "ipv6-unicast")}}
+              ,
               "multipath": {
                 "allow-multiple-as": true,
                 "max-paths-level-1": 64,
                 "max-paths-level-2": 64
+              }
+          {{- end }}
+          {{- if $af.RFC5549 }}
+              ,
+              "ipv4-unicast": {
+                "advertise-ipv6-next-hops": true,
+                "receive-ipv6-next-hops": true
               }
           {{- end }}
             }

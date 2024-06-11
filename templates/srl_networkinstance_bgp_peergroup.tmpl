@@ -9,7 +9,7 @@
               {{- range $index, $af := .AddressFamilies}}
                 {{- if $index}},{{- end}}
                 {
-                  "afi-safi-name": "{{ $af }}",
+                  "afi-safi-name": "{{ $af.Name }}",
                   "admin-state": "disable"
                 }
               {{- end }}

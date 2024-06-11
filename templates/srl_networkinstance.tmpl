@@ -2,6 +2,10 @@
       "name": "{{.Name}}",
       "description": "k8s-{{.Name}}",
       "admin-state": "enable",
+      "ip-forwarding": {
+        "receive-ipv4-check": false,
+        "receive-ipv6-check": false
+      },
       "type": "{{ .Type }}",
   {{- if ne 0 (len .Interfaces)}}
       "interface": [

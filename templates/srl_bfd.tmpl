@@ -5,32 +5,32 @@
     {{- if $index}},{{- end}}
        {
         "id": "{{ (ifName $itfce.SubInterfaceName.Name) }}.{{ $itfce.SubInterfaceName.ID}}"
-      {{- if (derefBool $itfce.BFD.Enabled) }}
+      {{- if (derefBool $itfce.BFDLinkParameters.Enabled) }}
         ,
         "admin-state": "enable"
       {{- else }}
         ,
         "admin-state": "disable"
       {{- end }}
-      {{- if ne (derefUint32 $itfce.BFD.MinEchoRx) 0 }}
+      {{- if ne (derefUint32 $itfce.BFDLinkParameters.MinEchoRx) 0 }}
         ,
-        "minimum-echo-receive-interval": {{ (derefUint32 $itfce.BFD.MinEchoRx) }}
+        "minimum-echo-receive-interval": {{ (derefUint32 $itfce.BFDLinkParameters.MinEchoRx) }}
       {{- end }}
-      {{- if ne (derefUint32 $itfce.BFD.MinRx) 0 }}
+      {{- if ne (derefUint32 $itfce.BFDLinkParameters.MinRx) 0 }}
         ,
-        "required-minimum-receive": {{ (derefUint32 $itfce.BFD.MinRx) }}
+        "required-minimum-receive": {{ (derefUint32 $itfce.BFDLinkParameters.MinRx) }}
       {{- end }}
-      {{- if ne (derefUint32 $itfce.BFD.MinTx) 0 }}
+      {{- if ne (derefUint32 $itfce.BFDLinkParameters.MinTx) 0 }}
         ,
-        "desired-minimum-transmit-interval": {{ (derefUint32 $itfce.BFD.MinTx) }}
+        "desired-minimum-transmit-interval": {{ (derefUint32 $itfce.BFDLinkParameters.MinTx) }}
       {{- end }}
-      {{- if ne (derefUint32 $itfce.BFD.Multiplier) 0 }}
+      {{- if ne (derefUint32 $itfce.BFDLinkParameters.Multiplier) 0 }}
         ,
-        "detection-multiplier": {{ (derefUint32 $itfce.BFD.Multiplier) }}
+        "detection-multiplier": {{ (derefUint32 $itfce.BFDLinkParameters.Multiplier) }}
       {{- end }}
-      {{- if ne (derefUint32 $itfce.BFD.TTL) 0 }}
+      {{- if ne (derefUint32 $itfce.BFDLinkParameters.TTL) 0 }}
         ,
-        "max-hop-count": {{ (derefUint32 $itfce.BFD.TTL) }}
+        "max-hop-count": {{ (derefUint32 $itfce.BFDLinkParameters.TTL) }}
       {{- end }}
        }
     {{- end }}
